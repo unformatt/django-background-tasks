@@ -8,7 +8,7 @@ from django import VERSION
 from django.core.management.base import BaseCommand
 from django.utils import autoreload
 
-from background_task.tasks import tasks, autodiscover
+from background_task.tasks import tasks, autodiscover, TaskCount
 from background_task.utils import SignalManager
 from compat import close_connection
 
@@ -97,12 +97,19 @@ class Command(BaseCommand):
 
         start_time = time.time()
 
-        while (duration <= 0) or (time.time() - start_time) <= duration:
+        while (duration <= 0) or (time.time() - start_time) <= duration or TaskCount.count > 0:
+            is_past_duration = duration > 0 and (time.time() - start_time) > duration
+
             if sig_manager.kill_now:
                 # shutting down gracefully
                 break
 
-            if not self._tasks.run_next_task(queue):
+            # if is_past_duration, we don't want to run any more tasks. We're just waiting for what's running
+            # to complete so we can exit.
+            if is_past_duration:
+                logger.debug('waiting for %s tasks to finish before exiting', TaskCount.count)
+                time.sleep(sleep)
+            elif not self._tasks.run_next_task(queue):
                 # there were no tasks in the queue, let's recover.
                 close_connection()
                 logger.debug('waiting for tasks')

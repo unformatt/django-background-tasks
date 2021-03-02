@@ -20,6 +20,10 @@ from background_task import signals
 logger = logging.getLogger(__name__)
 
 
+class TaskCount(object):
+    count = 0
+
+
 def bg_runner(proxy_task, task=None, *args, **kwargs):
     """
     Executes the function attached to task. Used to enable threads.
@@ -40,7 +44,9 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
                 task = task_qs[0]
         if func is None:
             raise BackgroundTaskError("Function is None, can't execute!")
+        TaskCount.count += 1
         func(*args, **kwargs)
+        TaskCount.count -= 1
 
         if task:
             # task done, so can delete it
