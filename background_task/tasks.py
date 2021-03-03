@@ -31,6 +31,7 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
     """
     signals.task_started.send(Task)
     try:
+        TaskCount.count += 1
         func = getattr(proxy_task, 'task_function', None)
         if isinstance(task, Task):
             args, kwargs = task.params()
@@ -44,9 +45,7 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
                 task = task_qs[0]
         if func is None:
             raise BackgroundTaskError("Function is None, can't execute!")
-        TaskCount.count += 1
         func(*args, **kwargs)
-        TaskCount.count -= 1
 
         if task:
             # task done, so can delete it
@@ -64,6 +63,10 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
             signals.task_error.send(sender=ex.__class__, task=task)
             task.reschedule(t, e, traceback)
         del traceback
+
+    finally:
+        TaskCount.count -= 1
+
     signals.task_finished.send(Task)
 
 
