@@ -59,7 +59,7 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
     except Exception as ex:
         t, e, traceback = sys.exc_info()
         if task:
-            logger.error('Rescheduling %s', task, exc_info=(t, e, traceback))
+            logger.warn('Rescheduling %s', task, exc_info=(t, e, traceback))
             signals.task_error.send(sender=ex.__class__, task=task)
             task.reschedule(t, e, traceback)
         del traceback
