@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class TaskCount(object):
     count = 0
+    task_guids = []
 
 
 def bg_runner(proxy_task, task=None, *args, **kwargs):
@@ -30,6 +31,8 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
     If a Task instance is provided, args and kwargs are ignored and retrieved from the Task itself.
     """
     signals.task_started.send(Task)
+    task_guid = None
+
     try:
         TaskCount.count += 1
         func = getattr(proxy_task, 'task_function', None)
@@ -43,6 +46,11 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
                 task_qs = task_qs.filter(queue=task_queue)
             if task_qs:
                 task = task_qs[0]
+
+        if task and isinstance(task, Task):
+            task_guid = '%s-%s' % (task.id, task.task_hash)
+            TaskCount.task_guids.append(task_guid)
+
         if func is None:
             raise BackgroundTaskError("Function is None, can't execute!")
         func(*args, **kwargs)
@@ -66,6 +74,8 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
 
     finally:
         TaskCount.count -= 1
+        if task_guid and task_guid in TaskCount.task_guids:
+            TaskCount.task_guids.remove(task_guid)
 
     signals.task_finished.send(Task)
 

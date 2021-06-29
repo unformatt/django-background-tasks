@@ -107,7 +107,7 @@ class Command(BaseCommand):
             # if is_past_duration, we don't want to run any more tasks. We're just waiting for what's running
             # to complete so we can exit.
             if is_past_duration:
-                logger.debug('waiting for %s tasks to finish before exiting', TaskCount.count)
+                logger.debug('waiting for %s tasks to finish before exiting. %s', TaskCount.count, TaskCount.task_guids)
                 time.sleep(sleep)
             elif not self._tasks.run_next_task(queue):
                 # there were no tasks in the queue, let's recover.
