@@ -20,9 +20,16 @@ from background_task import signals
 logger = logging.getLogger(__name__)
 
 
-class TaskCount(object):
-    count = 0
+class _TaskCount(object):
+
     task_guids = []
+
+    @property
+    def count(self):
+        return len(self.task_guids)
+
+
+TaskCount = _TaskCount()
 
 
 def bg_runner(proxy_task, task=None, *args, **kwargs):
@@ -34,7 +41,6 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
     task_guid = None
 
     try:
-        TaskCount.count += 1
         func = getattr(proxy_task, 'task_function', None)
         if isinstance(task, Task):
             args, kwargs = task.params()
@@ -73,7 +79,6 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
         del traceback
 
     finally:
-        TaskCount.count -= 1
         if task_guid and task_guid in TaskCount.task_guids:
             TaskCount.task_guids.remove(task_guid)
 
