@@ -33,9 +33,15 @@ BACKGROUND_TASK_RUN_ASYNC = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': u'[%(levelname)s] %(name)s:%(funcName)s %(message)s'
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'default'
         },
     },
     'loggers': {

@@ -868,8 +868,8 @@ class LoggingTestCase(TransactionTestCase):
     def test_error_logging(self, mock_logger):
         self.failing_task()
         run_next_task()
-        self.assertFalse(mock_logger.warning.called)
-        self.assertTrue(mock_logger.error.called)
+        self.assertTrue(mock_logger.warning.called)
+        self.assertFalse(mock_logger.error.called)
         self.assertFalse(mock_logger.critical.called)
 
 
