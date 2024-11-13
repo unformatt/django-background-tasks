@@ -50,6 +50,9 @@ def bg_runner(proxy_task, task=None, *args, **kwargs):
             task_qs = Task.objects.get_task(task_name=task_name, args=args, kwargs=kwargs)
             if task_queue:
                 task_qs = task_qs.filter(queue=task_queue)
+            else:
+                task_qs = task_qs.filter(queue__isnull=True)
+
             if task_qs:
                 task = task_qs[0]
 
@@ -217,7 +220,6 @@ class TaskSchedule(object):
     def action(self):
         return self._action or TaskSchedule.SCHEDULE
 
-
     def __repr__(self):
         return 'TaskSchedule(run_at=%s, priority=%s)' % (self._run_at,
                                                          self._priority)
@@ -252,6 +254,9 @@ class DBTaskRunner(object):
             existing = unlocked.filter(task_hash=task_hash)
             if queue:
                 existing = existing.filter(queue=queue)
+            else:
+                existing = existing.filter(queue__isnull=True)
+
             if action == TaskSchedule.RESCHEDULE_EXISTING:
                 updated = existing.update(run_at=run_at, priority=priority)
                 if updated:

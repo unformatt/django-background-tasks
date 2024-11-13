@@ -49,6 +49,9 @@ class TaskManager(models.Manager):
         qs = self.unlocked(now)
         if queue:
             qs = qs.filter(queue=queue)
+        else:
+            qs = qs.filter(queue__isnull=True)
+
         ready = qs.filter(run_at__lte=now, failed_at=None)
         _priority_ordering = '{}priority'.format(app_settings.BACKGROUND_TASK_PRIORITY_ORDERING)
         ready = ready.order_by(_priority_ordering, 'run_at')
